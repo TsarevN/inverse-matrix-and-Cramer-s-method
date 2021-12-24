@@ -1,217 +1,194 @@
-#include <malloc.h>
 #include <stdio.h>
-#include <math.h>	
+#include <stdlib.h>
+#include <math.h>
+#include <malloc.h>
 
-double det(int n, double** mat)
+void DeleteElements(float** matrix, int n, float** TempMatrix, int row, int col)
 {
-	double d = 0;
-	int c, subi, i, j, subj;
-	double** submat = (double**)malloc(n * sizeof(double));
+	int k = 0;
+	int m = 0;
 	for (int i = 0; i < n; i++)
-		submat[i] = (double*)malloc(n * sizeof(double));
-	if (n == 2)
 	{
-		return((mat[0][0] * mat[1][1]) - (mat[1][0] * mat[0][1]));
-	}
-	else
-	{
-		for (c = 0; c < n; c++)
-		{
-			subi = 0;
-			for (i = 1; i < n; i++)
-			{
-				subj = 0;
-				for (j = 0; j < n; j++)
-				{
-					if (j == c)
-					{
-						continue;
-					}
-					submat[subi][subj] = mat[i][j];
-					subj++;
-				}
-				subi++;
-			}
-			d = d + (pow(-1, c) * mat[0][c] * det(n - 1, submat));
-		}
-	}
-	free(submat);
-	return d;
-
-}
-
-void inversion(double** A, int N) 
-{
-	double DeterMatrix;
-	DeterMatrix = det(N, A);
-	if (DeterMatrix == 0)
-	{
-		printf("\nThe determinant is 0, the inverse matrix does not exist\n");
-	}
-	else
-	{
-		double temp;
-		double** E = (double**)malloc(N * sizeof(double));
-
-		for (int i = 0; i < N; i++)
-			E[i] = (double*)malloc(N * sizeof(double));
-
-		for (int i = 0; i < N; i++)
-		{
-			for (int j = 0; j < N; j++)
-			{
-				E[i][j] = 0.0;
-
-				if (i == j)
-					E[i][j] = 1.0;
-			}
-		}
-
-		for (int k = 0; k < N; k++)
-		{
-			temp = A[k][k];
-
-			for (int j = 0; j < N; j++)
-			{
-				A[k][j] /= temp;
-				E[k][j] /= temp;
-			}
-
-			for (int i = k + 1; i < N; i++)
-			{
-				temp = A[i][k];
-
-				for (int j = 0; j < N; j++)
-				{
-					A[i][j] -= A[k][j] * temp;
-					E[i][j] -= E[k][j] * temp;
-				}
-			}
-		}
-
-		for (int k = N - 1; k > 0; k--)
-		{
-			for (int i = k - 1; i >= 0; i--)
-			{
-				temp = A[i][k];
-
-				for (int j = 0; j < N; j++)
-				{
-					A[i][j] -= A[k][j] * temp;
-					E[i][j] -= E[k][j] * temp;
-				}
-			}
-		}
-
-		for (int i = 0; i < N; i++)
-			for (int j = 0; j < N; j++)
-				A[i][j] = E[i][j];
-
-		printf("Inversion matrix:\n");
-		for (int i = 0; i < N; i++)
-		{
-			for (int j = 0; j < N; j++)
-			{
-				printf("%.3lf ", A[i][j]);
-			}
-			printf("\n");
-		}
-
-		free(E);
-	}
-
-}
-
-void Kramer(int n, double** aMain, double* freeVar, double* answer)
-{
-	double* detArray = (double*)malloc(n * sizeof(double));
-	double deterMain;
-	double* temp = (double*)malloc(n * sizeof(double));
-	deterMain = det(n, aMain);
-	if (deterMain == 0)
-	{
-		printf("\nThe determinant is 0, the Cramer method cannot be solved\n");
-	}
-	else
-	{
-		for (int i = 0; i < n; i++)
+		if (i != row)
 		{
 			for (int j = 0; j < n; j++)
 			{
-				temp[j] = aMain[j][i];
-				aMain[j][i] = freeVar[j];
+				if (j != col)
+					TempMatrix[k][m] = matrix[i][j];
+				else continue;
+				m++;
 			}
-	
-			detArray[i] = det(n, aMain);
-			
-			for (int k = 0; k < n; k++)
-				aMain[k][i] = temp[k];
-
+			m = 0;
+			k++;
 		}
-
-		printf("\nSearched roots:\n");
-		for (int i = 0; i < n; i++)
-		{
-			answer[i] = detArray[i] / deterMain;
-			printf("\nx%d = %.3lf\n", i + 1, answer[i]);
-		}
-
-		free(detArray);
-		free(temp);
+		else continue;
 	}
 }
 
-
-int main()
+float Determinant(float** matrix, int n)
 {
-	int n;
-	double DeterMatrix;
-	printf("Enter a number of variables ");
-	scanf_s("%d", &n);
-	double** aMain = (double**)malloc(n * sizeof(double));
-	double** aMain1 = (double**)malloc(n * sizeof(double));
-	double* freeVar = (double*)malloc(n * sizeof(double));
-	double* answer = (double*)malloc(n * sizeof(double));
+	float temp = 0;
+	int k = 1;
+	if (n == 1)
+		temp = matrix[0][0];
+	else
+		if (n == 2)
+			temp = matrix[0][0] * matrix[1][1] - matrix[1][0] * matrix[0][1];
+		else
+		{
+			for (int i = 0; i < n; i++)
+			{
+				int m = n - 1;
+				int** temp_matr = malloc(m * sizeof(int));
+				for (int j = 0; j < m; j++)
+					temp_matr[j] = malloc(m * sizeof(int));
+
+				DeleteElements(matrix, n, temp_matr, 0, i);
+				temp = temp + k * matrix[0][i] * Determinant(temp_matr, m);
+				k = -k;	
+				free(temp_matr);
+			}
+		}
+	return temp;
+}
+
+void MatrixTransponse(float** InvMatrix, float** TranspInvMatrix, int n)
+{
 	for (int i = 0; i < n; i++)
+		for (int j = 0; j < n; j++)
+			TranspInvMatrix[j][i] = InvMatrix[i][j];
+}
+
+void NumberOne()
+{
+	int n, m;
+	printf("Enter the size matrix:\n");
+	printf("number of lines: ");
+	scanf_s("%d", &n);
+	printf("number of columns: ");
+	scanf_s("%d", &m);
+	if ((n != m) || (n < 1))
 	{
-		aMain[i] = (double*)malloc(n * sizeof(double));
-		aMain1[i] = (double*)malloc(n * sizeof(double));
+		printf("Only a square matrix can have an inverse");
+		exit(1);
+	}
+	float** matrix = (float**)malloc(n * (sizeof(float)));
+	float** InvMatrix = (float**)malloc(n * (sizeof(float)));
+	float** TranspInvMatrix = (float**)malloc(n * (sizeof(float)));
+	for (int i = 0; i < n; ++i)
+	{
+		matrix[i] = (float*)malloc(n * sizeof(float));
+		InvMatrix[i] = (float*)malloc(n * (sizeof(float)));
+		TranspInvMatrix[i] = (float*)malloc(n * (sizeof(float)));
+	}
+	printf("Enter matrix:\n");
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < n; j++)
+		{
+			printf("Matrix[%d][%d] = ", i, j);
+			scanf_s("%f", &matrix[i][j]);
+		}
+
+	int Deter = Determinant(matrix, n);
+	printf("\nDeterminant = %d\n", Deter);
+	if (Deter == 0)
+	{
+		printf("The determinant is 0, the inverse matrix does not exist");
+		exit(1);
 	}
 	for (int i = 0; i < n; i++)
 		for (int j = 0; j < n; j++)
 		{
+			float** TempMatrix = (float*)malloc(n * sizeof(float));
+			for (int k = 0; k < n-1; k++)
+				TempMatrix[k] = ((float*)malloc(n * sizeof(float)));
+			DeleteElements(matrix, n, TempMatrix, i, j);
+			InvMatrix[i][j] = pow(-1, i + j + 2) * Determinant(TempMatrix, n-1) / Deter;
+		}
+	MatrixTransponse(InvMatrix, TranspInvMatrix, n);
+	printf("\n");
+	for (int i = 0; i < n; i++)
+	{
+		for (int j = 0; j < n; j++)
+		{
+			printf("%.3f ", TranspInvMatrix[i][j]);
+		}
+		printf("\n");
+	}
+}
+
+void NumberTwo()
+{
+	int n;
+	int m;
+	int DeterMatrix;
+	printf("Enter the size matrix:\n");
+	printf("number of lines: ");
+	scanf_s("%d", &n);
+	printf("number of columns: ");
+	scanf_s("%d", &m);
+	if ((n != m) || (n < 1))
+	{
+		printf("Incorrect size of matrix");
+		exit(1);
+	}
+	float** matrix = (float**)malloc(n * (sizeof(float)));
+	float* freeVar = (float*)malloc(n * (sizeof(float)));
+	float* answer = (float*)malloc(n * (sizeof(float)));
+	for (int i = 0; i < n; i++)
+		matrix[i] = (float*)malloc(n * (sizeof(float)));
+	for (int i = 0; i < n; i++)
+		for (int j = 0; j < n; j++)
+		{
 			printf("A[%d][%d]=", i, j);
-			scanf_s("%lf", &aMain[i][j]);
-			aMain1[i][j] = aMain[i][j];
+			scanf_s("%f", &matrix[i][j]);
 		}
 	printf("\nEnter free variables\n");
 	for (int i = 0; i < n; i++)
 	{
 		printf("b[%d]=", i);
-		scanf_s("%lf", &freeVar[i]);
+		scanf_s("%f", &freeVar[i]);
 	}
-	printf("\nOriginal Matrix:\n");
+	DeterMatrix = Determinant(matrix, n);
+	printf("\nDeterminant = %d\n", DeterMatrix);
+
+	if (DeterMatrix == 0)
+	{
+		printf("\nThe determinant is 0, the Cramer method cannot be solved\n");
+		exit(1);
+	}
+
+	float* detMatrix = (float*)malloc(n * (sizeof(float)));
+	float* temp = (float*)malloc(n * (sizeof(float)));
 	for (int i = 0; i < n; i++)
 	{
 		for (int j = 0; j < n; j++)
 		{
-			printf("%.0lf ", aMain[i][j]);
+			temp[j] = matrix[j][i];
+			matrix[j][i] = freeVar[j];
 		}
-		printf("\n");
+
+		detMatrix[i] = Determinant(matrix, n);
+
+		for (int k = 0; k < n; k++)
+			matrix[k][i] = temp[k];
+
 	}
 
-	DeterMatrix = det(n, aMain);
-	printf("\nDeterminant = %.3lf\n", DeterMatrix);
-	printf("\n");
+	printf("\nSearched roots:\n");
+	for (int i = 0; i < n; i++)
+	{
+		answer[i] = detMatrix[i] / DeterMatrix;
+		printf("\nx%d = %.3f\n", i + 1, answer[i]);
+	}
 
-	inversion(aMain1, n);	//NumberOne
+	free(detMatrix);
+	free(temp);
+}
 
-	Kramer(n, aMain, freeVar, answer);	//NumberTwo
-
-	free(aMain);
-	free(aMain1);
-	free(freeVar);
-	free(answer);
-
+int main()
+{
+	NumberOne();
+	NumberTwo();
 	return 0;
 }
